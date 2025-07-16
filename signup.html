@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up - Genovad</title>
+  <script src="genovad-storage.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#f0f4f8] flex items-center justify-center min-h-screen">
+
+  <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold text-[#0f4c5c] mb-6 text-center">Create your Genovad Account</h2>
+    <form id="signupForm" onsubmit="handleSignup(event)">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+        <input required type="text" name="name" class="w-full px-4 py-2 border rounded focus:ring-[#1d7874] focus:outline-none" />
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+        <input required type="email" name="email" class="w-full px-4 py-2 border rounded focus:ring-[#1d7874] focus:outline-none" />
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+        <input required type="text" name="company" class="w-full px-4 py-2 border rounded focus:ring-[#1d7874] focus:outline-none" />
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <div class="relative">
+          <input required type="password" name="password" id="passwordField"
+            class="w-full px-4 py-2 border rounded focus:ring-[#1d7874] focus:outline-none" oninput="checkStrength(this.value)" />
+          <button type="button" onclick="togglePassword()" class="absolute right-3 top-2 text-sm text-gray-500 hover:text-gray-700">
+            Show
+          </button>
+        </div>
+        <p id="strengthMeter" class="text-xs mt-1 text-gray-600"></p>
+      </div>
+      <button type="submit" class="w-full bg-[#1d7874] text-white py-2 rounded hover:bg-[#155e57] transition">Sign Up</button>
+    </form>
+
+    <div id="signupMessage" class="mt-4 text-center text-sm font-medium"></div>
+
+    <p class="text-sm text-center mt-4 text-gray-600">
+      Already have an account?
+      <a href="login.html" class="text-[#1d7874] hover:underline">Login here</a>
+    </p>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const input = document.getElementById("passwordField");
+      const btn = input.nextElementSibling;
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "Hide";
+      } else {
+        input.type = "password";
+        btn.textContent = "Show";
+      }
+    }
+
+    function checkStrength(password) {
+      const meter = document.getElementById("strengthMeter");
+      let strength = 0;
+      if (password.length > 5) strength++;
+      if (password.match(/[A-Z]/)) strength++;
+      if (password.match(/[0-9]/)) strength++;
+      if (password.match(/[^A-Za-z0-9]/)) strength++;
+
+      const levels = ["Very Weak", "Weak", "Moderate", "Strong"];
+      const colors = ["text-red-600", "text-orange-500", "text-yellow-600", "text-green-600"];
+
+      meter.textContent = levels[strength] || "";
+      meter.className = `text-xs mt-1 ${colors[strength] || ""}`;
+    }
+
+    async function handleSignup(e) {
+      e.preventDefault();
+
+      const form = document.getElementById("signupForm");
+      const messageBox = document.getElementById("signupMessage");
+      const formData = new FormData(form);
+
+      const data = {
+        name: formData.get("name"),
+        email: formData.get("email"),
+        company: formData.get("company"),
+        password: formData.get("password")
+      };
+
+      try {
+        const res = await fetch("http://localhost:5000/api/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          messageBox.textContent = result.message || "Signup failed.";
+          messageBox.className = "mt-4 text-center text-sm font-medium text-red-600";
+          return;
+        }
+
+        messageBox.textContent = "🎉 Signup successful! Please check your email to verify your account.";
+        messageBox.className = "mt-4 text-center text-sm font-medium text-green-600";
+
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1500);
+      } catch (err) {
+        console.error("Signup error:", err);
+        messageBox.textContent = "An unexpected error occurred.";
+        messageBox.className = "mt-4 text-center text-sm font-medium text-red-600";
+      }
+      
+    }
+  </script>
+</body>
+</html>
